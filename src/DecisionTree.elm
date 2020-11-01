@@ -1,7 +1,7 @@
 module DecisionTree exposing (Tree(..), treeDecoder)
 
 import Array exposing (Array, get)
-import Json.Decode as Decode
+import Json.Decode as Dece
 
 type Tree a
     = Empty
@@ -15,36 +15,36 @@ type alias Decision =
 type alias DecisionTree = (Tree Decision)
 
 decisionDecoder =
-    Decode.map3 Decision
-        (Decode.field "threshold" Decode.float)
-        (Decode.field "feature" Decode.int)
-        (Decode.field "probabilities" (Decode.array (Decode.array Decode.float)))
+    Dece.map3 Decision
+        (Dece.field "threshold" Dece.float)
+        (Dece.field "feature" Dece.int)
+        (Dece.field "probabilities" (Dece.array (Dece.array Dece.float)))
 
-treeDecoder : Decode.Decoder DecisionTree
+treeDecoder : Dece.Decoder DecisionTree
 treeDecoder =
-    Decode.oneOf([
-        Decode.map3 (\decision left right -> Node decision left right)
+    Dece.oneOf([
+        Dece.map3 (\decision left right -> Node decision left right)
             decisionDecoder
-            (Decode.field "left" (Decode.lazy (\_ -> treeDecoder)))
-            (Decode.field "right" (Decode.lazy (\_ -> treeDecoder))),
+            (Dece.field "left" (Dece.lazy (\_ -> treeDecoder)))
+            (Dece.field "right" (Dece.lazy (\_ -> treeDecoder))),
 
-        Decode.map2 (\decision left -> Node decision left Empty)
+        Dece.map2 (\decision left -> Node decision left Empty)
             decisionDecoder
-            (Decode.field "left" (Decode.lazy (\_ -> treeDecoder))),
+            (Dece.field "left" (Dece.lazy (\_ -> treeDecoder))),
 
-        Decode.map2 (\decision right -> Node decision Empty right)
+        Dece.map2 (\decision right -> Node decision Empty right)
             decisionDecoder
-            (Decode.field "right" (Decode.lazy (\_ -> treeDecoder))),
+            (Dece.field "right" (Dece.lazy (\_ -> treeDecoder))),
 
-        Decode.map (\decision -> Node decision Empty Empty)
+        Dece.map (\decision -> Node decision Empty Empty)
             decisionDecoder
     ])
 
-predictHelp: Array Float -> DecisionTree -> (Array (Array Float)) -> Maybe (Array (Array Float))
+type alias Float2D = Array (Array Float)
+predictHelp: Array Float -> DecisionTree -> Float2D -> Maybe Float2D
 predictHelp x dt best_guess =
     case dt of
-        Empty ->
-            Just best_guess
+        Empty -> Just best_guess
         Node decision left right ->
             Maybe.andThen
                 (\feature -> predictHelp
@@ -53,7 +53,7 @@ predictHelp x dt best_guess =
                     decision.probabilities
                 )
                 (get decision.feature x)
-predict: Array Float -> DecisionTree -> Maybe (Array (Array Float))
+predict: Array Float -> DecisionTree -> Maybe Float2D
 predict x dt = case dt of
     Empty -> Nothing
     Node decision left right -> predictHelp x dt decision.probabilities
