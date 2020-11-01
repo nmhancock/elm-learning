@@ -1,4 +1,4 @@
-module DecisionTree exposing (Tree(..), treeDecoder)
+module DecisionTree exposing (Tree(..), treeDecoder, predict)
 
 import Array exposing (Array, get)
 import Json.Decode as Dece
